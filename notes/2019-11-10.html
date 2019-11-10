@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" type="image/png" href="../images/kumatheworld.png">
+  <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/themes/prism.min.css" integrity="sha256-77qGXu2p8NpfcBpTjw4jsMeQnz0vyh74f5do0cWjQ/Q=" crossorigin="anonymous" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/prism.min.js" integrity="sha256-HWJnMZHGx7U1jmNfxe4yaQedmpo/mtxWSIXvcJkLIf4=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/components/prism-python.min.js" integrity="sha256-zXSwQE9cCZ8HHjjOoy6sDGyl5/3i2VFAxU8XxJWfhC0=" crossorigin="anonymous"></script>
+  <title>Understanding torch.nn.functional.nll_loss()</title>
+  </head>
+
+  <body>
+  <table width="800" border="0" align="center" cellspacing="0" cellpadding="0">
+    <tr>
+      <td>
+        <h1>Understanding torch.nn.functional.nll_loss()</h1>
+        Last updated: Nov. 10th, 2019
+        <hr>
+        <p>
+          Here we deal with a simple classification problem with \(C\) classes. Given an input \(x\), a classifier \(f\) is supposed to output a probability vector \(f(x)=[p_1,p_2,...,p_C]^\top\). Let's say the correct class for \(x\) is \(k\). Then the <b>negative log likelihood loss</b> is given by
+          \[
+            -\log(p_k).
+          \]
+          People use <a href="https://pytorch.org/docs/stable/nn.functional.html#nll-loss">torch.nn.functional.nll_loss()</a> to compute the negative log likelihood loss with PyTorch, but <b>it actually does something different</b>.
+        </p>
+        <p>
+          According to the <a href="https://pytorch.org/docs/stable/nn.functional.html#nll-loss">official documentation</a>, it expects <b>log-probabilities, not probabilities</b>. That means it does not have to apply \( \log \) again to get the negative log likelihood loss. In other words, <b>it rather calculates \( -p_k \), not \( -\log(p_k) \)</b>.
+        </p>
+        <p>
+          To see what is going on with the function, let's look at the code below.
+        </p>
+        <pre><code class="language-python">import torch
+import torch.nn.functional as F
+
+# z is of size N x C = 3 x 5
+z = torch.randn(3, 5)
+predicted = F.log_softmax(z, dim=1)
+
+# each element in target has 0 <= value < C
+target = torch.tensor([1, 0, 4])
+loss = F.nll_loss(predicted, target)
+
+# loss is equivalent to the following
+negative_mean = - (predicted[0][1] + predicted[1][0] + predicted[2][4]) / 3
+
+print(f'predicted = \n{predicted}')
+print(f'loss = {loss}')
+print(f'negative_mean = {negative_mean}')</code></pre>
+        Result:
+        <pre><code class="language-python">predicted =
+tensor([[-3.6353, -1.5871, -0.7560, -2.5487, -1.5079],
+        [-2.9480, -3.2418, -1.6451, -0.4507, -2.5471],
+        [-1.9487, -2.9425, -0.9009, -1.8429, -1.4262]])
+loss = 1.987074851989746
+negative_mean = 1.987074851989746</code></pre>
+        <p>
+          The result is quite self-explanatory. <span style="font-family: Rockwell, serif">F.nll_loss</span> takes log-probabilities
+          <span style="font-family: Rockwell, serif">predicted</span> and outputs the average of the loss over the 3 batches, which actually is identical to the negated mean of the predicted log probabilities of the target class. Note that what I used here for the prediction is <a href="https://pytorch.org/docs/stable/nn.functional.html#log-softmax">F.log_softmax()</a>, not <a href="https://pytorch.org/docs/stable/nn.functional.html#softmax">F.softmax()</a>.
+        </p>
+        <p>
+          At first I thought I should use <a href="https://pytorch.org/docs/stable/nn.functional.html#softmax">F.softmax()</a> before <a href="https://pytorch.org/docs/stable/nn.functional.html#nll-loss">torch.nn.functional.nll_loss()</a> because I assumed using <a href="https://pytorch.org/docs/stable/nn.functional.html#log-softmax">F.log_softmax()</a> would apply \(\log\) twice. But the truth is that <a href="https://pytorch.org/docs/stable/nn.functional.html#nll-loss">torch.nn.functional.nll_loss()</a> <b>does not calculate \(\log\) at all</b> since its input is supposed to be log-probabilities in the first place.
+        </p>
+      </td>
+    </tr>
+  </table>
+  </body>
+</html>
