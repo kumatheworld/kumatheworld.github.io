@@ -15,7 +15,7 @@
     <tr>
       <td>
         <h1>My backprop for conv layers is wrong but works, why?</h1>
-        Last updated: Dec. 5th, 2019
+        Last updated: Dec. 9th, 2019
         <hr>
         <p>
           Recently I wrote a CNN in NumPy from scratch, without resorting to any deep learning framework. It was exciting to derive the backpropagation formula for several types of layers such as linear layers, max pooling layers, etc. But I ran into something very weird while I was implementing the backprop algorithm for convolutional layers.
@@ -58,7 +58,7 @@
           <img src="../images/cnn_loss_plot.png">
         </p>
         <p>
-          I still can't figure out why it worked. Chances are that the filters are flip-invariant but it seems unlikely. And there's another mystery. The loss decreased immediately when it was implemented in PyTorch (the blue line in the figure), but it wasn't the case for the handmade CNNs. They did't learn much in the first epoch. Maybe it was because of bad initializations, but I used the one of Xavier so it shouldn't affect the result that much. I hope I can understand this weird loss behavior in the future.
+          I still can't figure out why it worked. Chances are that the filters are flip-invariant but it seems unlikely. And there's another mystery. The loss decreased immediately when it was implemented in PyTorch (the blue line in the figure), but it wasn't the case for the handmade CNNs. They did't learn much in the first epoch. Maybe it was because of bad initializations, but I used <s>the one of Xavier</s> so it shouldn't affect the result that much. <b>(Later I found my initialization was wrong. I implemented the one used in PyTorch but it didn't change the result so much either.)</b> I hope I can understand this weird loss behavior in the future.
         </p>
         <p>
           Code is available at <a href="https://github.com/kumatheworld/nn-playground">my GitHub repository</a>.
